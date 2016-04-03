@@ -1,0 +1,22 @@
+.stitches-sprite(@x: 0, @y: 0, @width: 0, @height: 0) {
+    background-position: @x @y;
+    width: @width;
+    height: @height;
+}
+
+.sprite {
+    background-image: url(spritesheet.png);    background-repeat: no-repeat;
+    display: block;
+
+    &.sprite-invader {
+        .stitches-sprite(0, 0, 30px, 20px);
+    }
+
+    &.sprite-invader2 {
+        .stitches-sprite(0, -20px, 30px, 20px);
+    }
+
+    &.sprite-tank {
+        .stitches-sprite(-30px, 0, 30px, 20px);
+    }
+}

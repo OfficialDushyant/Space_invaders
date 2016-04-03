@@ -1,0 +1,292 @@
+<!doctype html>
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+<meta charset="utf-8">
+<title>Invaders from space</title>
+<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+
+<link rel="stylesheet" href="css/style.css" type="text/css" />
+<script src="js/helpers.js"></script>
+
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:IsMyDocuments msdt:dt="string">1</mso:IsMyDocuments>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+
+<body>
+
+<div class="banner">
+<header>
+<table id="Table_01" width="970" height="36" border="0" cellpadding="0" cellspacing="0">
+	<tr>
+		<td>
+			<img src="images/manu_01.jpg" width="35" height="36" alt=""></td>
+		<td>
+			<a href="#">
+			<img src="images/Logo.png" width="177" height="36" border="0" alt=""></a></td>
+		<td>
+        	
+			<img src="images/manu_03.jpg" width="385" height="36" alt=""></td>
+		<td>
+        	<a href="#">
+			<img src="images/manu_04.jpg" width="74" height="36" alt=""></td>
+		<td>
+        	
+			<img src="images/manu_05.jpg" width="83" height="36" alt=""></td>
+		<td>
+        	<a href="#">
+			<img src="images/manu_06.jpg" width="67" height="36" alt=""></td>
+		<td>
+       
+			<img src="images/manu_07.jpg" width="65" height="36" alt=""></td>
+		<td>
+        	<a href="#">
+			<img src="images/manu_08.gif" width="48" height="36" alt=""></td>
+		<td>
+    
+			<img src="images/manu_09.jpg" width="36" height="36" alt=""></td>
+	</tr>
+</table>
+</header>
+    	<canvas id="gamePlace" width="450" height="500"> your brouser is not suporting HTML5 canvas </canvas>
+        	<section class="content">	
+                <div id="tabs">
+                    <ul>
+                        <li><a href="#tabs-1">Game</a></li>
+                        <li><a href="#tabs-2" onClick="loadScore();">Score</a></li>
+                    </ul>
+                    <div id="tabs-1">
+                        <div style="width:400px; float:left; text-align:left;">
+              				<h1>Instruction</h1>
+               				<p>Destroy Enemy Invaders before they reach the ground. Watch out for enemy fire!</p>                				
+       				 	</div>
+        				<div style="width:180px; float:right; text-align:left;">
+          					<h1>Controls</h1>
+               		    	<p>A - Move Left<br/> D - Move Right <br/> Space Bar - Fire</p> 
+        				</div>
+                   </div>
+                    <div id="tabs-2">
+                    	<div id="Scores">
+                        	<p>This is tab 2</p>
+                        </div>
+                    </div>
+            </div>
+            </section>
+</div>
+<footer>
+	<div class="footercontent">
+			Sorce &copy; 2016 by <a href="#" target="_blank">Dushyant Patel</a>
+     </div>
+</footer>
+
+<!-- Script for Jquri UI and AJAX-->
+<script>
+$(init);
+			function init(){
+				$('#tabs').tabs();
+			}
+			var SCORE_SERVER = 'http://playdoh.algonquincollege.com/lts/mike/WebServices/MessageService.asmx/GetScores';
+			function loadScore(){
+				$.ajax({
+					url: SCORE_SERVER,
+					type:'GET',
+					contentType:'application/json',
+					cache:'false',
+					success: onGetSuccess,
+					error: onAJAXError
+				});
+				
+			}
+			function onGetSuccess(data){
+				
+				var scores = data.d;
+				var html = "";
+				for(var i in scores){
+					var name = scores[i].name;
+					var score = scores[i].score;
+					
+					html += i +'(' + name + '***********************' + score+ '<br/>';
+				}
+				var $scoreHolder = $('#Scores').find('p');
+				$scoreHolder.html(html);
+						}
+			function onAJAXError(){
+				alert('Error');
+			}
+		</script>
+<!--Script for game-->
+<script>
+	var screen, input, frames, spFrame, lvFrame;
+	var alSprite, taSprite;
+	var aliens, dir, tank, bullets, points;
+	window.addEventListener('load' , main);
+	function main(){
+		screen = new Screen();
+		input = new InputHandeler();
+		
+		var img = new Image();
+		img.src = "images/spritesheet.png";
+		img.addEventListener("load", function(){
+
+			alSprite = [
+				[new Sprite(this, 0, 0, 30, 20), new Sprite(this, 0, 20, 30, 20)]
+			];
+
+			taSprite = new Sprite(this, 30,0,30,20);
+
+			init();
+
+			run();
+		});
+		
+	};
+
+	function init() {
+		frames = 0;
+		spFrame = 0;
+		lvFrame = 60;
+		dir = 1;
+		points=0;
+		tank = {
+			sprite: taSprite,
+			x: (screen.canvas.width - taSprite.w) / 2,
+			y: screen.canvas.height - (30 + taSprite.h)
+		};
+
+		bullets = [];
+
+		aliens = [];
+		var rows = [0, 0, 0, 0, 0];
+		for(var i =0, len = rows.length; i < len; i++){
+			for (var j = 0; j < 7; j++){
+				var a  = rows[i];
+				
+				aliens.push({
+					sprite: alSprite[a],
+					x: 40 + j*40 + [0,4,0][a],
+					y:30 + i*30,
+					w: alSprite[a][0].w,
+					h: alSprite[a][0].h
+				});
+				
+			}
+		}
+	};
+
+	function run() {
+		var loop = function(){
+			update();
+			render();
+
+			window.requestAnimationFrame(loop, screen.canvas);
+		};
+		window.requestAnimationFrame(loop, screen.canvas);
+	};
+
+	function update(){
+
+		if (input.isDown(65)){//left
+			tank.x -= 4;
+
+		}
+		if (input.isDown(68)){//right
+			tank.x += 4;
+		}
+		tank.x = Math.max(Math.min(tank.x, screen.canvas.width - (30 + taSprite.w)),30);
+
+		if(input.isPressed(32)){//Fire
+			bullets.push(new Bullet(tank.x+15, tank.y, -10, 2, 6, "#f00"));
+		}
+		
+
+		for(var i =0, len = bullets.length; i < len; i++){
+			var b  = bullets[i];
+			b.update();
+
+			if(b.y + b.height < 0 || b.y > screen.canvas.height){
+				bullets.splice(i,1);
+				
+				i--;
+				len--;
+				continue;
+			}
+
+			for (var j = 0, len2 = aliens.length; j < len2; j++){
+				var a = aliens[j];
+				if (AABBIntersect(b.x, b.y, b.width, b.height, a.x, a.y, a.w, a.h)){
+					points += 10;
+					aliens.splice(j,1);
+					j--;
+					len2--;
+					bullets.splice(i,1);
+					i--;
+					len--;
+				}
+				
+			}
+		}
+
+		if (Math.random() < 0.025 && aliens.length > 0){
+			var a = aliens[Math.round(Math.random() * (aliens.length - 1))];
+
+			for (var i = 0, len = aliens.length; i < len; i++){
+				var b = aliens[i];
+				if(AABBIntersect(a.x, a.y, a.w, 200, b.x, b.y, b.w, b.h)){
+					a=b;
+				}
+			}
+			bullets.push(new Bullet(a.x+a.w*0.5, a.y + a.h, 4, 2, 4,"#fff"));
+		}
+
+		frames++;
+		if(frames% lvFrame === 0){
+			spFrame = (spFrame+1) % 2;
+
+			var _max = 0, _min = screen.canvas.width;
+
+			for (var i =0, len = aliens.length; i < len; i++){
+				var a = aliens[i];
+				a.x += 30 * dir;
+
+				_max = Math.max(_max, a.x + a.w);
+				_min = Math.min(_min, a.x);
+			}
+			if (_max > screen.canvas.width-30 || _min < 30){
+				dir *= -1;
+				for (var i =0, len = aliens.length; i < len; i++){
+					aliens[i].x += 30 * dir;
+					aliens[i].y += 30;
+				}
+			}
+		}
+	};
+
+	function render(){
+		screen.clr();
+		for (var i = 0; i < aliens.length; i++) {
+		 var a = aliens[i];
+		 screen.drawSprite(a.sprite[spFrame], a.x, a.y);
+		}
+		
+		
+		screen.ctx.save();
+		for (var i = 0 , len = bullets.length; i < len; i++){
+			screen.drawBullet(bullets[i]);
+		}
+		screen.ctx.restore();
+		
+		screen.drawSprite(tank.sprite, tank.x, tank.y);
+		screen.ctx.fillStyle = 'white';
+
+		screen.ctx.font = '15px Arial';
+
+		screen.ctx.fillText( 'Score: ' + points, 10, 20 );
+	};
+	</script>
+</body>
+</html>
